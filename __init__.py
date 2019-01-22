@@ -131,7 +131,7 @@ class Command:
     def on_complete(self, ed_self):
         st = get_status(ed)
         if st!=ST_MIDDLE:
-            return False
+            return
     
         x0, y0, x1, y1 = ed.get_carets()[0]
         x0init = x0
@@ -139,7 +139,7 @@ class Command:
             x0 -= 1
         txt = ed.get_text_substr(x0-1, y0, x0, y0)
         if txt != '@':
-            return False
+            return
 
         if 'Script' in ed.get_prop(PROP_LEXER_CARET):
             text = acp_jsdocs
