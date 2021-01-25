@@ -11,5 +11,5 @@ It helps to enter docblock comments for lexers: PHP, JavaScript, CoffeeScript.
 2) Auto-completion works, for JavaScript and PHP: inside docblock type "@" and press Ctrl+Space (ie hotkey for auto-completion): you'll see list of JSDoc or PHPDoc tags. 
 
 
-Author: Alexey (CudaText)
+Author: Alexey Torgashin (CudaText)
 License: MIT
