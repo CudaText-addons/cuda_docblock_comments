@@ -1,21 +1,15 @@
 from cudatext import *
 
-ST_NONE = 'n'
-ST_BEGIN = 'b'
-ST_MIDDLE = 'm'
+ST_NONE = 'none'
+ST_SEL = 'sel'
+ST_AFTER = 'after'
+ST_BEGIN = 'begin'
+ST_MIDDLE = 'mid'
 
 def log(s):
     print('[DocBlock]', s)
+    #pass
 
-def get_status(ed):
-    x0, y0, x1, y1 = ed.get_carets()[0]
-    ln = ed.get_text_line(y0)
-    end = x0 >= len(ln)
-    if ln.rstrip().endswith('/**') and end:
-        return ST_BEGIN
-    if ln.lstrip().startswith('* '):
-        return ST_MIDDLE
-    return ST_NONE
 
 JSDOCS = [
   'abstract',
@@ -131,12 +125,51 @@ def get_completions(word, is_js):
     return '\n'.join(items)+'\n'
 
 
+def status_on_complete(ed):
+    x0, y0, x1, y1 = ed.get_carets()[0]
+    if y1>=0:
+        return ST_SEL
+    ln = ed.get_text_line(y0)
+    if x0 > len(ln):
+        return ST_AFTER
+    if not ln.lstrip().startswith('* '):
+        return ST_NONE
+    n = ln.find('* ')
+    if x0<=n:
+        return ST_NONE
+    return ST_MIDDLE
+
+def status_on_key(ed):
+    x0, y0, x1, y1 = ed.get_carets()[0]
+    if y1>=0:
+        return ST_SEL
+    ln = ed.get_text_line(y0)
+    
+    if ln.rstrip().endswith('/**'):
+        n = ln.rfind('/**')
+        if x0>=len(ln):
+            return ST_BEGIN
+        else:
+            return ST_NONE
+
+    if ln.lstrip().startswith('*'):
+        n = ln.find('*')
+        if x0>=n+2:
+            return ST_MIDDLE
+        else:
+            return ST_NONE
+
+    return ST_NONE
+
+
 class Command:
-    # autocomplete only after "@" or "@text"
+
     def on_complete(self, ed_self):
+        ''' autocomplete only after "@" or "@text" '''
+        
         log('on_complete init')
-        st = get_status(ed)
-        if st!=ST_MIDDLE:
+        st = status_on_complete(ed)
+        if st not in [ST_MIDDLE]:
             return log('on_complete bad status: '+str(st))
 
         x0, y0, x1, y1 = ed.get_carets()[0]
@@ -171,25 +204,26 @@ class Command:
     def on_key(self, ed_self, key, state):
         log('on_key init')
         ed = ed_self
-        st = get_status(ed)
         eol = '\n'
-        if st==ST_NONE:
-            return log('on_key bad status: '+str(st))
+        st = status_on_key(ed)
+        if st not in [ST_BEGIN, ST_MIDDLE]:
+            return log('on_key, bad status: '+str(st))
         if key!=13:
-            return log('on_key unknown key')
+            return log('on_key, unknown key')
+            
+        log('on_key, status: '+str(st))
 
         x, y, x1, y1 = ed.get_carets()[0]
+        ln = ed.get_text_line(y)
 
         if st==ST_BEGIN:
-            ln = ed.get_text_line(y)
-            pos = ln.find('/**')
+            pos = ln.rfind('/**')
             indent = ' '*(pos+1)
             ed.insert(x, y, eol+indent+'* '+eol+indent+'*/')
             ed.set_caret(len(indent)+3, y+1)
             return False #block Enter
 
         if st==ST_MIDDLE:
-            ln = ed.get_text_line(y)
             pos = ln.find('* ')
             indent = ' '*pos
             ed.insert(x, y, eol+indent+'* ')
