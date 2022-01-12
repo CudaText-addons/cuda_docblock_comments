@@ -1,6 +1,11 @@
 
+2022.01.12
+- fix: adapt to last CudaText changes (JSDoc lexer appeared)
+- fix: pressing Enter after '* text' added bad empty line
+- fix: pressing Enter after 'text /**' inserted wrong non-space indent
+
 2018.12.14
-- fix: plugin was blocking other autocompletion plugins
+- fix: plugin was blocking other auto-completion plugins
 
 2015.10
 initial

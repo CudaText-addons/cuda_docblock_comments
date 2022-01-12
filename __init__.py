@@ -1,8 +1,11 @@
 from cudatext import *
 
-ST_NONE = 0
-ST_BEGIN = 1
-ST_MIDDLE = 2
+ST_NONE = 'n'
+ST_BEGIN = 'b'
+ST_MIDDLE = 'm'
+
+def log(s):
+    print('[DocBlock]', s)
 
 def get_status(ed):
     x0, y0, x1, y1 = ed.get_carets()[0]
@@ -129,9 +132,10 @@ acp_phpdocs = '\n'.join(phpdocs)+'\n'
 class Command:
     # autocomplete only after "@" or "@text"
     def on_complete(self, ed_self):
+        log('on_complete init')
         st = get_status(ed)
         if st!=ST_MIDDLE:
-            return
+            return log('on_complete bad status: '+str(st))
     
         x0, y0, x1, y1 = ed.get_carets()[0]
         x0init = x0
@@ -139,40 +143,45 @@ class Command:
             x0 -= 1
         txt = ed.get_text_substr(x0-1, y0, x0, y0)
         if txt != '@':
+            log('on_complete not after @')
             return
 
-        if 'Script' in ed.get_prop(PROP_LEXER_CARET):
+        lex = ed.get_prop(PROP_LEXER_CARET)
+        if 'Script' in lex or lex=='JSDoc':
             text = acp_jsdocs
+            log('lexer JS')
         else:
             text = acp_phpdocs
+            log('lexer PHP')
         
         chars_num = x0init-x0
         ed.complete(text, chars_num, 0)
         return True            
 
     def on_key(self, ed_self, key, state):
+        log('on_key init')
         ed = ed_self
         st = get_status(ed)
         eol = '\n'
         if st==ST_NONE:
-            return
+            return log('on_key bad status: '+str(st))
+        if key!=13:
+            return log('on_key unknown key')
 
-        msg = {ST_NONE: '?', ST_BEGIN: 'block start', ST_MIDDLE: 'block middle'}
-        msg_status('DocBlock: '+ msg[st])
         x, y, x1, y1 = ed.get_carets()[0]
             
         if st==ST_BEGIN:
             ln = ed.get_text_line(y)
             pos = ln.find('/')
-            indent = ln[:pos]
-            ed.insert(x, y, eol+indent+'* '+eol+indent+'*/'+eol)
+            indent = ' '*pos
+            ed.insert(x, y, eol+indent+'* '+eol+indent+'*/')
             ed.set_caret(len(indent)+3, y+1)
             return False #block Enter
             
         if st==ST_MIDDLE:
             ln = ed.get_text_line(y)
             pos = ln.find('*')
-            indent = ln[:pos]
-            ed.insert(x, y, eol+indent+'* '+eol)
+            indent = ' '*pos
+            ed.insert(x, y, eol+indent+'* ')
             ed.set_caret(len(indent)+3, y+1)
             return False #block Enter
