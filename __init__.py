@@ -16,8 +16,8 @@ def get_status(ed):
     if ln.lstrip().startswith('* '):
         return ST_MIDDLE
     return ST_NONE
-    
-jsdocs = [
+
+JSDOCS = [
   'abstract',
   'access',
   'alias',
@@ -95,8 +95,8 @@ jsdocs = [
   'version',
   'virtual',
   ]
-  
-phpdocs = [
+
+PHPDOCS = [
   'abstract',
   'access',
   'author',
@@ -120,14 +120,16 @@ phpdocs = [
   'subpackage',
   'todo',
   'version',
-  ]  
+  ]
 
-jsdocs = ['jsdoc' + '|' + item + '|' for item in jsdocs]
-acp_jsdocs = '\n'.join(jsdocs)+'\n'
+def get_completions(word, is_js):
+    prefix = 'jsdoc' if is_js else 'phpdoc'
+    tags = JSDOCS if is_js else PHPDOCS
+    if bool(word):
+        tags = [t for t in tags if t.startswith(word)]
+    items = [prefix + '|' + t + '|' for t in tags]
+    return '\n'.join(items)+'\n'
 
-phpdocs = ['phpdoc' + '|' + item + '|' for item in phpdocs]
-acp_phpdocs = '\n'.join(phpdocs)+'\n'
-           
 
 class Command:
     # autocomplete only after "@" or "@text"
@@ -136,27 +138,35 @@ class Command:
         st = get_status(ed)
         if st!=ST_MIDDLE:
             return log('on_complete bad status: '+str(st))
-    
+
         x0, y0, x1, y1 = ed.get_carets()[0]
+        line = ed.get_text_line(y0) 
+        if x0>len(line):
+            return log('on_complete, after line end')
         x0init = x0
-        while ed.get_text_substr(x0-1, y0, x0, y0).isalpha():
+        
+        while (x0>0) and line[x0-1].isalpha():
             x0 -= 1
-        txt = ed.get_text_substr(x0-1, y0, x0, y0)
+        txt = line[x0-1]
         if txt != '@':
-            log('on_complete not after @')
-            return
+            return log('on_complete not after @')
 
         lex = ed.get_prop(PROP_LEXER_CARET)
-        if 'Script' in lex or lex=='JSDoc':
-            text = acp_jsdocs
-            log('lexer JS')
-        else:
-            text = acp_phpdocs
-            log('lexer PHP')
+        is_js = 'Script' in lex or lex=='JSDoc'
+        word = line[x0:x0init]
+        text = get_completions(word, is_js)
         
-        chars_num = x0init-x0
-        ed.complete(text, chars_num, 0)
-        return True            
+        len1 = len(word)
+        
+        x2 = x0init
+        while x2<len(line) and line[x2].isalpha():
+            x2 += 1
+        len2 = x2-x0init
+
+        log('on_complete, word="%s" len1=%d len2=%d'%(word, len1, len2))
+        ed.complete(text, len1, len2)
+        return True
+
 
     def on_key(self, ed_self, key, state):
         log('on_key init')
@@ -169,7 +179,7 @@ class Command:
             return log('on_key unknown key')
 
         x, y, x1, y1 = ed.get_carets()[0]
-            
+
         if st==ST_BEGIN:
             ln = ed.get_text_line(y)
             pos = ln.find('/**')
@@ -177,7 +187,7 @@ class Command:
             ed.insert(x, y, eol+indent+'* '+eol+indent+'*/')
             ed.set_caret(len(indent)+3, y+1)
             return False #block Enter
-            
+
         if st==ST_MIDDLE:
             ln = ed.get_text_line(y)
             pos = ln.find('* ')
