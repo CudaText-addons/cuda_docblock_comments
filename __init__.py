@@ -7,8 +7,8 @@ ST_BEGIN = 'begin'
 ST_MIDDLE = 'mid'
 
 def log(s):
-    print('[DocBlock]', s)
-    #pass
+    #print('[DocBlock]', s)
+    pass
 
 
 JSDOCS = [
