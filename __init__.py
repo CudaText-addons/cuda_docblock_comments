@@ -147,7 +147,7 @@ def status_on_key(ed):
     
     if ln.rstrip().endswith('/**'):
         n = ln.rfind('/**')
-        if x0>=len(ln):
+        if x0>=len(ln.rstrip()):
             return ST_BEGIN
         else:
             return ST_NONE
@@ -220,12 +220,12 @@ class Command:
             pos = ln.rfind('/**')
             indent = ' '*(pos+1)
             ed.insert(x, y, eol+indent+'* '+eol+indent+'*/')
-            ed.set_caret(len(indent)+3, y+1)
+            ed.set_caret(len(indent)+2, y+1)
             return False #block Enter
 
         if st==ST_MIDDLE:
             pos = ln.find('* ')
             indent = ' '*pos
             ed.insert(x, y, eol+indent+'* ')
-            ed.set_caret(len(indent)+3, y+1)
+            ed.set_caret(len(indent)+2, y+1)
             return False #block Enter
