@@ -172,15 +172,15 @@ class Command:
             
         if st==ST_BEGIN:
             ln = ed.get_text_line(y)
-            pos = ln.find('/')
-            indent = ' '*pos
+            pos = ln.find('/**')
+            indent = ' '*(pos+1)
             ed.insert(x, y, eol+indent+'* '+eol+indent+'*/')
             ed.set_caret(len(indent)+3, y+1)
             return False #block Enter
             
         if st==ST_MIDDLE:
             ln = ed.get_text_line(y)
-            pos = ln.find('*')
+            pos = ln.find('* ')
             indent = ' '*pos
             ed.insert(x, y, eol+indent+'* ')
             ed.set_caret(len(indent)+3, y+1)
