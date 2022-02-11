@@ -218,14 +218,14 @@ class Command:
 
         if st==ST_BEGIN:
             pos = ln.rfind('/**')
-            indent = ' '*(pos+1)
+            indent = ln[0:pos] + ' '
             ed.insert(x, y, eol+indent+'* '+eol+indent+'*/')
             ed.set_caret(len(indent)+2, y+1)
             return False #block Enter
 
         if st==ST_MIDDLE:
             pos = ln.find('* ')
-            indent = ' '*pos
+            indent = ln[0:pos]
             ed.insert(x, y, eol+indent+'* ')
             ed.set_caret(len(indent)+2, y+1)
             return False #block Enter
