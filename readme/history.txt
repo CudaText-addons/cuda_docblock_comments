@@ -1,3 +1,5 @@
+2022.02.11
+- fix: wrong indent size using TAB
 
 2022.01.12
 - fix: adapt to last CudaText changes (JSDoc lexer appeared)
